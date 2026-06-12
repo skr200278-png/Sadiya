@@ -10,6 +10,20 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+  let hmrConfig: any = false;
+  try {
+    if (env.APP_URL && env.APP_URL.startsWith('http')) {
+      const urlObj = new URL(env.APP_URL);
+      hmrConfig = {
+        host: urlObj.hostname,
+        protocol: 'wss',
+        clientPort: 443,
+      };
+    }
+  } catch (e) {
+    // Keep as default false
+  }
+
   return {
     plugins: [
       {
@@ -135,9 +149,7 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
+      hmr: hmrConfig,
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
